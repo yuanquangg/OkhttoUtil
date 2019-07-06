@@ -1,0 +1,166 @@
+package com.tcl.adplayer.OKHttp;
+
+
+import java.io.IOException;
+import java.util.Map;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+public class OkhttpUtil {
+    public static final String METHOD_GET = "GET";
+    public static final String METHOD_POST = "POST";
+    private static OkHttpClient mOkHttpClient;
+    private static OkhttpUtil mInstance;
+
+    public OkhttpUtil(OkHttpClient okHttpClient) {
+        if (okHttpClient == null){
+            mOkHttpClient = new OkHttpClient();
+        } else{
+            mOkHttpClient = okHttpClient;
+        }
+
+    }
+
+    public static OkhttpUtil initClient(OkHttpClient okHttpClient) {
+        if (mInstance == null){
+            synchronized (OkhttpUtil.class) {
+                if (mInstance == null) {
+                    mInstance = new OkhttpUtil(okHttpClient);
+                }
+            }
+        }
+        return mInstance;
+    }
+
+    public static OkhttpUtil getInstance(){
+        return initClient(null);
+    }
+
+    /**
+     * get请求
+     *
+     * @param url：url
+     * @param callBack：回调接口，执行在UI线程。
+     */
+    public static void okHttpGet(String url, CallBackUtil callBack) {
+
+        okHttpGet(url, null, null, callBack);
+    }
+
+    /**
+     * get请求，可以传递参数
+     *
+     * @param url：url
+     * @param paramsMap：map集合，封装键值对参数
+     * @param callBack：回调接口，执行在UI线程。
+     */
+    public static void okHttpGet(String url, Map<String, String> paramsMap, CallBackUtil callBack) {
+        okHttpGet(url, paramsMap, null, callBack);
+    }
+
+    /**
+     * get请求，可以传递参数
+     *
+     * @param url：url
+     * @param paramsMap：map集合，封装键值对参数
+     * @param headerMap：map集合，封装请求头键值对
+     * @param callBack：回调接口，执行在UI线程。
+     */
+    public static void okHttpGet(String url, Map<String, String> paramsMap, Map<String, String> headerMap, CallBackUtil callBack) {
+        execute(new RequestUtil(METHOD_GET, url, paramsMap, headerMap).getOkHttpRequest(), callBack);
+    }
+
+    /**
+     * post请求
+     *
+     * @param url：url
+     * @param callBack：回调接口，执行在UI线程。
+     */
+    public static void okHttpPost(String url, CallBackUtil callBack) {
+        okHttpPost(url, null, callBack);
+    }
+
+    public static void okHttpPost(String url, Map<String, String> paramsMap, CallBackUtil callBack) {
+        okHttpPost(url, paramsMap, null, callBack);
+    }
+
+    /**
+     * post请求，可以传递参数
+     *
+     * @param url：url
+     * @param paramsMap：map集合，封装键值对参数
+     * @param headerMap：map集合，封装请求头键值对
+     * @param callBack：回调接口，执行在UI线程。
+     */
+    public static void okHttpPost(String url, Map<String, String> paramsMap, Map<String, String> headerMap, CallBackUtil callBack) {
+        execute(new RequestUtil(METHOD_POST, url, paramsMap, headerMap).getOkHttpRequest(), callBack);
+    }
+
+
+    public static void okHttpPostJson(String url, String jsonStr, CallBackUtil callBack) {
+        okHttpPostJson(url, jsonStr, null, callBack);
+    }
+
+    /**
+     * post请求，可以传递参数
+     *
+     * @param url：url
+     * @param jsonStr：json格式的键值对参数
+     * @param headerMap：map集合，封装请求头键值对
+     * @param callBack：回调接口，执行在UI线程。
+     */
+    public static void okHttpPostJson(String url, String jsonStr, Map<String, String> headerMap, CallBackUtil callBack) {
+        execute(new RequestUtil(METHOD_POST, url, jsonStr, headerMap).getOkHttpRequest(), callBack);
+    }
+
+    /**
+     * 下载文件,不带参数
+     */
+    public static void okHttpDownloadFile(String url, CallBackUtil.CallBackFile callBack) {
+        okHttpDownloadFile(url, null, callBack);
+    }
+
+    /**
+     * 下载文件,带参数
+     */
+    public static void okHttpDownloadFile(String url, Map<String, String> paramsMap, CallBackUtil.CallBackFile callBack) {
+        okHttpGet(url, paramsMap, null, callBack);
+    }
+
+    /**
+     * 加载图片
+     */
+    public static void okHttpGetBitmap(String url, CallBackUtil.CallBackBitmap callBack) {
+        okHttpGetBitmap(url, null, callBack);
+    }
+
+    /**
+     * 加载图片，带参数
+     */
+    public static void okHttpGetBitmap(String url, Map<String, String> paramsMap, CallBackUtil.CallBackBitmap callBack) {
+        okHttpGet(url, paramsMap, null, callBack);
+    }
+
+    private static void execute(Request request, final CallBackUtil callBack) {
+        mOkHttpClient.newCall(request).enqueue(new Callback() {
+
+            @Override
+            public void onResponse(final Call call, final Response response) throws IOException {
+                if (callBack != null) {
+                    callBack.onSuccess(call, response);
+                }
+            }
+
+            @Override
+            public void onFailure(final Call call, final IOException e) {
+                if (callBack != null) {
+                    callBack.onError(call, e);
+                }
+            }
+        });
+    }
+
+}
